@@ -1,0 +1,79 @@
+/* Reset básico */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #e5e7e9;
+    margin: 0;
+    padding: 0;
+}
+
+/* Container principal */
+.container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 20px;
+}
+
+/* Estilização do título */
+h2 {
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 20px;
+    color: #343a40;
+}
+
+/* Estilos da tabela */
+.table {
+    width: 100%;
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.table th {
+    background-color: #212529;
+    color: white;
+    padding: 10px;
+}
+
+.card-aber{
+    background-color: #6A31D8 !important;
+}
+
+.table td {
+    padding: 10px;
+    text-align: center;
+}
+
+/* Badges de status */
+.badge {
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+/* Ajuste para o gráfico */
+canvas {
+    max-width: 100%;
+    height: auto;
+}
+
+.grafiChar{
+    width: auto !important;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    h2 {
+        font-size: 20px;
+    }
+
+    .table td, .table th {
+        font-size: 14px;
+    }
+
+    .container {
+        padding: 10px;
+    }
+}
