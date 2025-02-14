@@ -36,7 +36,7 @@ class DashboardController extends Controller
         }
 
         // Paginação dos chamados
-        $chamados = $query->paginate(10);
+        $chamados = $query->paginate(15);
         $chamadosCollection = collect($chamados->items());
 
         // Contagem de chamados por status
@@ -45,19 +45,11 @@ class DashboardController extends Controller
             'Aguardando' => $chamadosCollection->where('status', 'Aguardando')->count(),
         ];
 
-        // Cálculo do tempo de atendimento e escalonamento
-        foreach ($chamadosCollection as $ticket) {
-            $tempoAtendimento = Carbon::parse($ticket->abertoEm)->diffInMinutes(now());
-            $ticket->tempoAtendimento = $tempoAtendimento;
+        $statusnivel = [
+            'Em Aberto' => $chamadosCollection->where('status', 'Em Aberto','criadoPor')->count(),
+        ];
 
-            if ($ticket->nivel === 'Junior' && $tempoAtendimento > 30) {
-                $ticket->escalonamento = "Escalonar para Pleno";
-            } elseif ($ticket->nivel === 'Pleno' && $tempoAtendimento > 150) {
-                $ticket->escalonamento = "Escalonar para Sênior";
-            } else {
-                $ticket->escalonamento = null;
-            }
-        }
+      
 
         return view('dashboard', compact('chamados', 'statusCount', 'chamadosCollection'));
     }

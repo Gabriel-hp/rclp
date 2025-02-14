@@ -40,6 +40,19 @@ h2 {
 .card-aber{
     background-color: #6A31D8 !important;
 }
+.card{
+    width: 350px !important;
+    height: 200px;
+    border-radius: 0;
+    border: none;
+}
+.card-title{
+    font-size: 35px;
+}
+.card-text{
+    font-size: 30px !important;
+}
+
 
 .table td {
     padding: 10px;
@@ -62,6 +75,29 @@ canvas {
 .grafiChar{
     width: auto !important;
 }
+
+.card-container {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.small-card {
+    width: 150px;
+    text-align: center;
+}
+
+.chart-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.grafiChar {
+    width: 350px !important;
+    height: 350px !important;
+}
+
 
 /* Responsividade */
 @media (max-width: 768px) {
