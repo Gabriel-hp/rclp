@@ -4,11 +4,85 @@
 <div class="container mt-4">
     <h2 class="mb-4">Painel de Chamados</h2>
 
+    <div class="row align-items-center">
+        <div class="col-md-6 d-flex justify-content-center">
+            <div class="tot">
+            <div class="totall">
+                    <div class="card-totall bg-tot1 card text-white ">
+                        <div class="card-body">
+                            <h5 class="card-title">Em Aberto</h5>
+                            <p class="card-text fs-4">{{ $statusCount['Em Aberto'] ?? 0 }}</p>
+
+                        </div>
+                    </div>
+                    <div class="card-totall infre card bg-tot text-white ">
+                        <div class="card-body">
+                            <h5 class="card-title">Aguardando</h5>
+                            <p class="card-text ">{{ $statusCount['Aguardando'] ?? 0 }}</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="container-cards">
+                <div class="sup">
+                    <div class="card-aber card text-white small-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Em Aberto Junior</h5>
+                            <p class="card-text fs-4">{{ $statusCount['Em Aberto Junior'] ?? 0 }}</p>
+
+                        </div>
+                    </div>
+                    <div class="card bg-agur text-white small-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Aguardando Junior</h5>
+                            <p class="card-text fs-4">{{ $statusCount['Aguardando Junior'] ?? 0 }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="infe ">
+                <div class="card-aber card text-white small-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Em Aberto Pleno</h5>
+                            <p class="card-text fs-4">{{ $statusCount['Em Aberto Pleno'] ?? 0 }}</p>
+
+                        </div>
+                    </div>
+                    <div class="card bg-agur text-white small-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Aguardando Pleno</h5>
+                            <p class="card-text fs-4">{{ $statusCount['Aguardando Pleno'] ?? 0 }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="infe ">
+                <div class="card-aber card text-white small-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Em Aberto Senior</h5>
+                            <p class="card-text fs-4">{{ $statusCount['Em Aberto Senior'] ?? 0 }}</p>
+
+                        </div>
+                    </div>
+                    <div class="card bg-agur text-white small-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Aguardando Senior</h5>
+                            <p class="card-text fs-4">{{ $statusCount['Aguardando Senior'] ?? 0 }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        <div class="col-md-6 d-flex justify-content-center">
+            <canvas class="grafiChar" id="chamadosChart"></canvas>
+        </div>
+    </div>
+
     <!-- Filtros -->
-    <form method="GET" action="{{ route('dashboard') }}" class="mb-4">
+    <form method="GET" action="{{ route('dashboard') }}" class="mb-4 mt-5">
         <div class="row g-2">
             <div class="col-md-3">
-                <input type="text" name="numero_chamado" class="form-control" placeholder="Número do chamado" value="{{ request('numero_chamado') }}">
+                <input type="text" name="numero_chamado" class="form-control" placeholder="Número do Protocolo" value="{{ request('numero_chamado') }}">
             </div>
             <div class="col-md-2">
                 <select name="status" class="form-control">
@@ -25,6 +99,16 @@
                     <option value="30" {{ request('periodo') == '30' ? 'selected' : '' }}>Últimos 30 dias</option>
                 </select>
             </div>
+            
+            <div class="col-md-1">
+                <select name="nivel" class="form-control">
+                    <option value="">Nível</option>
+                    <option value="Junior" {{ request('nivel') == 'Junior' ? 'selected' : '' }}>Junior</option>
+                    <option value="Pleno" {{ request('nivel') == 'Pleno' ? 'selected' : '' }}>Pleno</option>
+                    <option value="Senior" {{ request('nivel') == 'Senior' ? 'selected' : '' }}>Senior</option>
+                </select>
+            </div>
+
             <div class="col-md-2">
                 <select name="ordenacao" class="form-control">
                     <option value="recente" {{ request('ordenacao') == 'recente' ? 'selected' : '' }}>Mais recentes</option>
@@ -37,41 +121,14 @@
         </div>
     </form>
 
-    
-
-    <div class="row text-center align-items-center">
-        <div class="col-md-6 d-flex justify-content-center">
-            <div class="d-flex gap-3">
-                <div class="card-aber card text-white small-card">
-                    <div class="card-body">
-                        <h5 class="card-title">Em Aberto</h5>
-                        <p class="card-text fs-4">{{ $statusCount['Em Aberto'] ?? 0 }}</p>
-
-                    </div>
-                </div>
-                <div class="card bg-info text-white small-card">
-                    <div class="card-body">
-                        <h5 class="card-title">Aguardando</h5>
-                        <p class="card-text fs-4">{{ $statusCount['Aguardando'] ?? 0 }}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 d-flex justify-content-center">
-            <canvas class="grafiChar" id="chamadosChart"></canvas>
-        </div>
-    </div>
-
     <!-- Lista de Chamados -->
     <div class="table-responsive mt-4">
         <table class="table table-bordered">
             <thead class="table-dark">
                 <tr>
-                    <th>Usuario</th>
                     <th>Assunto</th>
                     <th>Protocolo</th>
                     <th>Status</th>
-                    <th>Aberto Em</th>
                     <th>Nível</th>
                     <th>Tempo Aberto</th>
                     <th>Escalonamento</th>
@@ -80,7 +137,6 @@
             <tbody>
                 @foreach($chamados as $chamado)
                     <tr>
-                        <td>{{ $chamado->criadoPor }}</td>
                         <td>{{ $chamado->assunto }}</td>
                         <td>{{ $chamado->protocolo }}</td>
                         <td>
@@ -88,7 +144,6 @@
                                 {{ $chamado->status }}
                             </span>
                         </td>
-                        <td>{{ \Carbon\Carbon::parse($chamado['abertoEm'])->format('d/m/Y H:i') }}</td>
                         <td>{{ $chamado->nivel }}</td>
                         <td>
                             @php
@@ -108,11 +163,11 @@
                             $limite = null;
 
                             if ($chamado->status == 'Aguardando') {
-                                $limite = 'Aguardando';
+                                $limite = 180;
                             } elseif ($chamado->nivel == 'Junior') {
                                 $limite = 30; // 30 minutos
                             } elseif ($chamado->nivel == 'Pleno') {
-                                $limite = 60; // 60 minutos
+                                $limite = 240; // 60 minutos
                             }
 
                             // Verificação para "Aguardando" maior que 5 dias (7200 minutos)
@@ -149,7 +204,7 @@
             datasets: [{
                 label: 'Número de Chamados',
                 data: [{{ $statusCount['Em Aberto'] ?? 0 }}, {{ $statusCount['Aguardando'] ?? 0 }}],
-                backgroundColor: ['#6A31D8', '#0DCAF0']
+                backgroundColor: ['#D77534', '#1D7287']
             }]
         },
     });

@@ -39,11 +39,22 @@ class DashboardController extends Controller
         $chamados = $query->paginate(15);
         $chamadosCollection = collect($chamados->items());
 
-        // Contagem de chamados por status
+       // Contagem de chamados por status e nível
         $statusCount = [
             'Em Aberto' => $chamadosCollection->where('status', 'Em Aberto')->count(),
             'Aguardando' => $chamadosCollection->where('status', 'Aguardando')->count(),
+
+            // 🔹 Contagem filtrada por nível
+            'Em Aberto Junior' => $chamadosCollection->where('status', 'Em Aberto')->where('nivel', 'Junior')->count(),
+            'Aguardando Junior' => $chamadosCollection->where('status', 'Aguardando')->where('nivel', 'Junior')->count(),
+
+            'Em Aberto Pleno' => $chamadosCollection->where('status', 'Em Aberto')->where('nivel', 'Pleno')->count(),
+            'Aguardando Pleno' => $chamadosCollection->where('status', 'Aguardando')->where('nivel', 'Pleno')->count(),
+
+            'Em Aberto Senior' => $chamadosCollection->where('status', 'Em Aberto')->where('nivel', 'Senior')->count(),
+            'Aguardando Senior' => $chamadosCollection->where('status', 'Aguardando')->where('nivel', 'Senior')->count(),
         ];
+
 
         $statusnivel = [
             'Em Aberto' => $chamadosCollection->where('status', 'Em Aberto','criadoPor')->count(),

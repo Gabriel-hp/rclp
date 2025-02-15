@@ -38,21 +38,77 @@ h2 {
 }
 
 .card-aber{
-    background-color: #6A31D8 !important;
-}
-.card{
-    width: 350px !important;
-    height: 200px;
-    border-radius: 0;
-    border: none;
-}
-.card-title{
-    font-size: 35px;
-}
-.card-text{
-    font-size: 30px !important;
+    background-color: #D77534 ;
 }
 
+.bg-agur{
+    background-color: #1D7287 ;
+
+}
+
+container-cards{
+    display: flex;
+    flex-direction: row !important;
+}
+
+.sup{
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+}
+
+.infe{
+    margin-top: 10px;
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+}
+.totall{
+    display: flex;
+    flex-direction: column;
+}
+
+.card-totall{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    width: 300px ;
+    height: 180px;
+    margin: 0px 5px 5px 5px ;
+    font-size: 30px;
+}
+
+.card-totall .card-text{
+    font-size: 60px !important;
+    text-align: center !important;
+}
+.totall, .container-cards {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    
+}
+
+.card-totall .infre{
+    margin-top: 5px !important;
+    text-align: center;
+    margin: 0 auto;
+
+}
+
+.bg-tot1{
+    background-color: #D77534;
+}
+
+.bg-tot{
+    background-color: #1D7287 ;
+}
+.card-body{
+    margin: auto 0 !important;
+    text-align: center !important;
+}
 
 .table td {
     padding: 10px;
@@ -74,6 +130,9 @@ canvas {
 
 .grafiChar{
     width: auto !important;
+}
+.grafiChar .labels{
+    font-size: 500px;
 }
 
 .card-container {
