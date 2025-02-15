@@ -2,7 +2,6 @@
 
 @section('content')
 <div class="container mt-4">
-    <h2 class="mb-4">Painel de Chamados</h2>
 
     <div class="row align-items-center">
         <div class="col-md-6 d-flex justify-content-center">
@@ -105,7 +104,7 @@
                     <option value="">Nível</option>
                     <option value="Junior" {{ request('nivel') == 'Junior' ? 'selected' : '' }}>Junior</option>
                     <option value="Pleno" {{ request('nivel') == 'Pleno' ? 'selected' : '' }}>Pleno</option>
-                    <option value="Senior" {{ request('nivel') == 'Senior' ? 'selected' : '' }}>Senior</option>
+                    <option value="Senior" {{ request('nivel') == 'Sênior' ? 'selected' : '' }}>Sênior</option>
                 </select>
             </div>
 
@@ -135,64 +134,26 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($chamados as $chamado)
-                    <tr>
-                        <td>{{ $chamado->assunto }}</td>
-                        <td>{{ $chamado->protocolo }}</td>
-                        <td>
-                            <span class="badge bg-{{ $chamado->status == 'Em Aberto' ? 'warning' : ($chamado->status == 'Aguardando' ? 'info' : 'success') }}">
-                                {{ $chamado->status }}
-                            </span>
-                        </td>
-                        <td>{{ $chamado->nivel }}</td>
-                        <td>
-                            @php
-                            $abertoEm = \Carbon\Carbon::parse($chamado->abertoEm); // Corrigido para acessar como objeto
-                            $agora = \Carbon\Carbon::now(); // Hora atual
-                            $diferenca = $abertoEm->diff($agora);
-
-                            $tempoAberto = sprintf('%d dias, %d horas e %d minutos', $diferenca->d, $diferenca->h, $diferenca->i);
-
-                            @endphp
-                            {{ $tempoAberto }}
-                        </td>
-                        <td>
-                            @php
-                            
-                            $tempoMinutos = $diferenca->days * 1440 + $diferenca->h * 60 + $diferenca->i;
-                            $limite = null;
-
-                            if ($chamado->status == 'Aguardando') {
-                                $limite = 180;
-                            } elseif ($chamado->nivel == 'Junior') {
-                                $limite = 30; // 30 minutos
-                            } elseif ($chamado->nivel == 'Pleno') {
-                                $limite = 240; // 60 minutos
-                            }
-
-                            // Verificação para "Aguardando" maior que 5 dias (7200 minutos)
-                            $acionarComercial = ($chamado->status == 'Aguardando' && $tempoMinutos > 7200);
-                        @endphp
-
-                        @if($acionarComercial)
-                            <span class="text-warning">Acionar Comercial</span>
-                        @elseif($limite && $tempoMinutos > $limite)
-                            <span class="text-danger">Necessário Escalonamento</span>
-                        @else
-                            <span class="text-success">Dentro do Tempo</span>
-                        @endif
-
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
+            @foreach($chamadosPaginados as $chamado)
+                <tr>
+                    <td>{{ $chamado['assunto'] }}</td>
+                    <td>{{ $chamado['protocolo'] }}</td>
+                    <td>
+                        <span class="badge bg-{{ $chamado['status'] == 'Em atendimento' ? 'success' : ($chamado['status'] == 'Aguardando' ? 'info' : 'warning') }}">
+                            {{ $chamado['status'] }}
+                        </span>
+                    </td>
+                    <td>{{ $chamado['nivel'] }}</td>
+                   
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
         </table>
     </div>
     
     <!-- Paginação -->
-    <div class="mt-4">
-        {{ $chamados->links() }}
-    </div>
+
 </div>
 
 <script>
