@@ -86,9 +86,8 @@
             <div class="col-md-2">
                 <select name="status" class="form-control">
                     <option value="">Todos os status</option>
-                    <option value="Em Aberto" {{ request('status') == 'Em Aberto' ? 'selected' : '' }}>Em Aberto</option>
+                    <option value="Em atendimento" {{ request('status') == 'Em atendimento' ? 'selected' : '' }}>Em atendimento</option>
                     <option value="Aguardando" {{ request('status') == 'Aguardando' ? 'selected' : '' }}>Aguardando</option>
-                    <option value="Fechado" {{ request('status') == 'Fechado' ? 'selected' : '' }}>Fechado</option>
                 </select>
             </div>
             <div class="col-md-2">
@@ -125,25 +124,31 @@
         <table class="table table-bordered">
             <thead class="table-dark">
                 <tr>
-                    <th>Assunto</th>
+                    <th>Cliente</th>
                     <th>Protocolo</th>
                     <th>Status</th>
-                    <th>Nível</th>
-                    <th>Tempo Aberto</th>
-                    <th>Escalonamento</th>
+                    <th>Grupo</th>
+                    <th>Tempo</th>
                 </tr>
             </thead>
             <tbody>
             @foreach($chamadosPaginados as $chamado)
                 <tr>
-                    <td>{{ $chamado['assunto'] }}</td>
-                    <td>{{ $chamado['protocolo'] }}</td>
-                    <td>
-                        <span class="badge bg-{{ $chamado['status'] == 'Em atendimento' ? 'success' : ($chamado['status'] == 'Aguardando' ? 'info' : 'warning') }}">
-                            {{ $chamado['status'] }}
-                        </span>
-                    </td>
-                    <td>{{ $chamado['nivel'] }}</td>
+                <td class="clientes">{{ $chamado['cliente'] }}</td> <!-- Exibe o nome do cliente -->
+                <td class="clientes-b">{{ $chamado['protocolo'] }}</td>
+                <td class="clientes-b">
+                    <span class="badge bg-{{ $chamado['status'] == 'Em atendimento' ? 'success' : ($chamado['status'] == 'Aguardando' ? 'info' : 'warning') }}">
+                        {{ $chamado['status'] }}
+                    </span>
+                </td>
+                <td class="clientes-b">{{ $chamado['nivel'] }}</td>
+                <td class="clientes-b">
+                @if($chamado['tempoAberto'])
+                    {{ $chamado['tempoAberto']->h }} horas e {{ $chamado['tempoAberto']->i }} minutos
+                @else
+                    Não informado
+                @endif
+                </td>
                    
                     </td>
                 </tr>

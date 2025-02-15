@@ -13,15 +13,15 @@
 </head>
 
 <body>
-<header class="bg-white dark:bg-gray-800 shadow-md p-0">
+<header class="bg-app  shadow-md p-0">
         <div class="container mx-auto flex justify-between items-center">
             <!-- Logo -->
-            <a href="{{ route('dashboard') }}" class="text-xl font-bold text-gray-800 dark:text-white">
-                <h1 class="text-dark">Logic Pro</h1>
+            <a href="{{ route('dashboard') }}" class="text-xl font-bold text-gray-800 text-white">
+                <h1 class="text-white">Logic Pro</h1>
             </a>
             <!-- Usuário e Logout -->
             <div class="flex items-center gap-4">
-                <span class="text-gray-700 dark:text-white">
+                <span class="text-gray-700 text-white">
                     {{ Auth::user()->name ?? 'Usuário' }}
                 </span>
 

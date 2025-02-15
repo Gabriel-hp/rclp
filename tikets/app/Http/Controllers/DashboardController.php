@@ -35,23 +35,22 @@ class DashboardController extends Controller
         }
 
         if ($request->filled('periodo')) {
-            $chamadosCollection = $chamadosCollection->filter(function ($ticket) use ($request) {
-                return strtotime($ticket['abertoEm']) >= now()->subDays($request->periodo)->timestamp;
+            $chamadosCollection = $chamadosCollection->filter(function ($chamado) use ($request) {
+                return strtotime($chamado['tempoAberto']) >= now()->subDays($request->periodo)->timestamp;
             });
         }
-
         if ($request->filled('nivel')) {
             $chamadosCollection = $chamadosCollection->where('nivel', $request->nivel);
         }
 
-        // Ordenação
-        if ($request->ordenacao == 'recente') {
-            $chamadosCollection = $chamadosCollection->sortByDesc('abertoEm');
-        } elseif ($request->ordenacao == 'antigo') {
-            $chamadosCollection = $chamadosCollection->sortBy('abertoEm');
-        }
+    // Ordenação
+    if ($request->ordenacao == 'recente') {
+        $chamadosCollection = $chamadosCollection->sortByDesc('abertoEm');
+    } elseif ($request->ordenacao == 'antigo') {
+        $chamadosCollection = $chamadosCollection->sortBy('abertoEm');
+    }
 
-        // 🔹 Paginação manual (15 por página)
+        // 🔹 Paginação manual (50 por página)
         $chamadosPaginados = $chamadosCollection->forPage($request->input('page', 1), 50);
 
         // 🔹 Contagem de chamados por status e nível
@@ -69,6 +68,9 @@ class DashboardController extends Controller
             'Aguardando Sênior' => $chamadosCollection->where('status', 'Aguardando')->where('nivel', 'Sênior')->count(),
         ];
 
+
+        
+
         return view('dashboard', compact('chamadosPaginados', 'statusCount', 'chamadosCollection'));
     }
 
@@ -77,8 +79,10 @@ class DashboardController extends Controller
         // Parâmetros da requisição
         $params = [
             'token' => $this->apiToken,
-            '$select' => 'subject,protocol,status,ownerTeam,createdDate',
-            '$filter' => "status eq 'Em atendimento' or status eq 'Aguardando'"
+            '$select' => 'protocol,status,ownerTeam,createdDate',
+            '$filter' => "status eq 'Em atendimento' or status eq 'Aguardando'",
+            '$expand' => 'clients($select=businessName)', 
+
 
         ];
 
@@ -86,12 +90,37 @@ class DashboardController extends Controller
         $response = Http::get($this->apiUrl, $params);
         if ($response->successful()) {
             return collect($response->json())->map(function ($ticket) {
-    
+               // Verifica se a chave 'createdDate' existe no array
+            $createdDate = $ticket['createdDate'] ?? null;
+
+            // Se a data de criação estiver disponível, processa e formata
+            if ($createdDate) {
+                // Remove possíveis "trailing data" da string de data
+                $createdDate = preg_replace('/\..+/', '', $createdDate); // Remove frações de segundos e dados extras
+
+                // Converte a data de abertura para o formato ISO 8601
+                $abertoEm = Carbon::parse($createdDate);
+
+                // Calcula o tempo aberto
+                $tempoAberto = $abertoEm->diff(Carbon::now());
+
+
+            $cliente = 'Cliente'; 
+            if (!empty($ticket['clients']) && is_array($ticket['clients'])) {
+                $cliente = $ticket['clients'][0]['businessName'] ?? 'Cliente'; 
+            }
+            } else {
+  
+                $abertoEm = null;
+                $tempoAberto = null;
+            }
+ 
                 return [
                     'protocolo' => $ticket['protocol'] ?? 'N/A',
-                    'assunto' => $ticket['subject'] ?? 'Sem Assunto',
+                    'cliente' => $cliente, // Adiciona o nome do cliente ao array
                     'status' => $ticket['status'] ?? 'Desconhecido',
-                    'nivel' => $this->getNivel($ticket['ownerTeam'] ?? 'Indefinido') 
+                    'nivel' => $this->getNivel($ticket['ownerTeam'] ?? 'Indefinido'),
+                    'tempoAberto' => $tempoAberto // Adiciona o tempo aberto ao array
                 ];
             })->toArray();
         }

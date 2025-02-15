@@ -1,7 +1,7 @@
 /* Reset básico */
 body {
     font-family: 'Arial', sans-serif;
-    background-color: #e5e7e9;
+    background-color: #181139;
     margin: 0;
     padding: 0;
 }
@@ -12,31 +12,40 @@ body {
     margin: auto;
     padding: 20px;
 }
-
-/* Estilização do título */
-h2 {
-    font-size: 24px;
-    font-weight: bold;
-    text-align: center;
-    margin-bottom: 20px;
-    color: #343a40;
+.bg-app{
+    background-color: #111125;
+    color: aliceblue;
 }
+
 
 /* Estilos da tabela */
 .table {
     width: 100%;
-    background-color: white;
+    background-color: #292952 !important;
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .table th {
-    background-color: #212529;
+    background-color: #111125;
     color: white;
     padding: 10px;
+    
 }
 
+
+ .clientes{
+    width: 400px !important;
+    background-color: #292952 !important;
+    color: aliceblue !important;
+
+}
+
+.clientes-b{
+    background-color: #292952 !important;
+    color: aliceblue !important;
+}
 .card-aber{
     background-color: #D77534 ;
 }
