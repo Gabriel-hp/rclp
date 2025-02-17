@@ -11,7 +11,6 @@
                         <div class="card-body">
                             <h5 class="card-title">Em Aberto</h5>
                             <p class="card-text fs-4">{{ $statusCount['Em Aberto'] ?? 0 }}</p>
-
                         </div>
                     </div>
                     <div class="card-totall infre card bg-tot text-white ">
@@ -27,14 +26,14 @@
                 <div class="sup">
                     <div class="card-aber card text-white small-card">
                         <div class="card-body">
-                            <h5 class="card-title">Em Aberto Junior</h5>
+                            <h5 class="card-title">Em Aberto N1</h5>
                             <p class="card-text fs-4">{{ $statusCount['Em Aberto Junior'] ?? 0 }}</p>
 
                         </div>
                     </div>
                     <div class="card bg-agur text-white small-card">
                         <div class="card-body">
-                            <h5 class="card-title">Aguardando Junior</h5>
+                            <h5 class="card-title">Aguardando N1</h5>
                             <p class="card-text fs-4">{{ $statusCount['Aguardando Junior'] ?? 0 }}</p>
                         </div>
                     </div>
@@ -42,14 +41,14 @@
                 <div class="infe ">
                 <div class="card-aber card text-white small-card">
                         <div class="card-body">
-                            <h5 class="card-title">Em Aberto Pleno</h5>
+                            <h5 class="card-title">Em Aberto N2</h5>
                             <p class="card-text fs-4">{{ $statusCount['Em Aberto Pleno'] ?? 0 }}</p>
 
                         </div>
                     </div>
                     <div class="card bg-agur text-white small-card">
                         <div class="card-body">
-                            <h5 class="card-title">Aguardando Pleno</h5>
+                            <h5 class="card-title">Aguardando N2</h5>
                             <p class="card-text fs-4">{{ $statusCount['Aguardando Pleno'] ?? 0 }}</p>
                         </div>
                     </div>
@@ -57,14 +56,14 @@
                 <div class="infe ">
                 <div class="card-aber card text-white small-card">
                         <div class="card-body">
-                            <h5 class="card-title">Em Aberto Senior</h5>
+                            <h5 class="card-title">Em Aberto N3</h5>
                             <p class="card-text fs-4">{{ $statusCount['Em Aberto Senior'] ?? 0 }}</p>
 
                         </div>
                     </div>
                     <div class="card bg-agur text-white small-card">
                         <div class="card-body">
-                            <h5 class="card-title">Aguardando Senior</h5>
+                            <h5 class="card-title">Aguardando N3</h5>
                             <p class="card-text fs-4">{{ $statusCount['Aguardando Senior'] ?? 0 }}</p>
                         </div>
                     </div>
@@ -129,6 +128,8 @@
                     <th>Status</th>
                     <th>Grupo</th>
                     <th>Tempo</th>
+                    <th>Escalonamento</th>
+                    <th>Ticket</th>
                 </tr>
             </thead>
             <tbody>
@@ -137,9 +138,9 @@
                 <td class="clientes">{{ $chamado['cliente'] }}</td> <!-- Exibe o nome do cliente -->
                 <td class="clientes-b">{{ $chamado['protocolo'] }}</td>
                 <td class="clientes-b">
-                    <span class="badge bg-{{ $chamado['status'] == 'Em atendimento' ? 'success' : ($chamado['status'] == 'Aguardando' ? 'info' : 'warning') }}">
-                        {{ $chamado['status'] }}
-                    </span>
+                        <span class="badge bg-{{ $chamado['status'] == 'Em atendimento' ? 'success' : ($chamado['status'] == 'Aguardando' ? 'info' : 'warning') }}">
+                            {{ $chamado['status'] }}
+                        </span>
                 </td>
                 <td class="clientes-b">{{ $chamado['nivel'] }}</td>
                 <td class="clientes-b">
@@ -149,10 +150,15 @@
                     Não informado
                 @endif
                 </td>
-                   
+                <td class="clientes-b">
+                    
+                    </td>
+                <td class="clientes-b">
+                  <a href="https://logicpro.movidesk.com/Ticket/EditByProtocol/{{ $chamado['protocolo'] }}" target="_blank"> <button type="button" class="btn btn-light">Acesse o ticket </button></a>
                     </td>
                 </tr>
             @endforeach
+
         </tbody>
         </table>
     </div>

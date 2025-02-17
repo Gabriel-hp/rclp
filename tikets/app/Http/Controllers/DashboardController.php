@@ -10,70 +10,7 @@ class DashboardController extends Controller
 {
     private $apiUrl = "https://api.movidesk.com/public/v1/tickets";
     private $apiToken = "8ef83eef-7ee0-4629-8d6d-ed0680eee679"; // Substitua pelo seu token
-
-    public function index(Request $request)
-    {
-        // Busca os chamados na API
-        $tickets = $this->buscarChamadosAPI();
-
-        if (!$tickets) {
-            return view('dashboard')->with('erro', 'Erro ao buscar chamados');
-        }
-
-        // Converte os tickets em uma coleção
-        $chamadosCollection = collect($tickets);
-
-        // 🔹 Aplicação de filtros
-        if ($request->filled('numero_chamado')) {
-            $chamadosCollection = $chamadosCollection->filter(function ($ticket) use ($request) {
-                return strpos($ticket['protocolo'], $request->numero_chamado) !== false;
-            });
-        }
-
-        if ($request->filled('status')) {
-            $chamadosCollection = $chamadosCollection->where('status', $request->status);
-        }
-
-        if ($request->filled('periodo')) {
-            $chamadosCollection = $chamadosCollection->filter(function ($chamado) use ($request) {
-                return strtotime($chamado['tempoAberto']) >= now()->subDays($request->periodo)->timestamp;
-            });
-        }
-        if ($request->filled('nivel')) {
-            $chamadosCollection = $chamadosCollection->where('nivel', $request->nivel);
-        }
-
-    // Ordenação
-    if ($request->ordenacao == 'recente') {
-        $chamadosCollection = $chamadosCollection->sortByDesc('abertoEm');
-    } elseif ($request->ordenacao == 'antigo') {
-        $chamadosCollection = $chamadosCollection->sortBy('abertoEm');
-    }
-
-        // 🔹 Paginação manual (50 por página)
-        $chamadosPaginados = $chamadosCollection->forPage($request->input('page', 1), 50);
-
-        // 🔹 Contagem de chamados por status e nível
-        $statusCount = [
-            'Em Aberto' => $chamadosCollection->where('status', 'Em atendimento')->count(),
-            'Aguardando' => $chamadosCollection->where('status', 'Aguardando')->count(),
-
-            'Em Aberto Junior' => $chamadosCollection->where('status', 'Em atendimento')->where('nivel', 'Junior')->count(),
-            'Aguardando Junior' => $chamadosCollection->where('status', 'Aguardando')->where('nivel', 'Junior')->count(),
-
-            'Em Aberto Pleno' => $chamadosCollection->where('status', 'Em atendimento')->where('nivel', 'Pleno')->count(),
-            'Aguardando Pleno' => $chamadosCollection->where('status', 'Aguardando')->where('nivel', 'Pleno')->count(),
-
-            'Em Aberto Sênior' => $chamadosCollection->where('status', 'Em atendimento')->where('nivel', 'Sênior')->count(),
-            'Aguardando Sênior' => $chamadosCollection->where('status', 'Aguardando')->where('nivel', 'Sênior')->count(),
-        ];
-
-
-        
-
-        return view('dashboard', compact('chamadosPaginados', 'statusCount', 'chamadosCollection'));
-    }
-
+    
     private function buscarChamadosAPI()
     {
         // Parâmetros da requisição
@@ -82,8 +19,6 @@ class DashboardController extends Controller
             '$select' => 'protocol,status,ownerTeam,createdDate',
             '$filter' => "status eq 'Em atendimento' or status eq 'Aguardando'",
             '$expand' => 'clients($select=businessName)', 
-
-
         ];
 
         // Faz a requisição à API
@@ -128,6 +63,71 @@ class DashboardController extends Controller
         return null;
     }
 
+    public function index(Request $request)
+    {
+        // Busca os chamados na API
+        $tickets = $this->buscarChamadosAPI();
+
+        if (!$tickets) {
+            return view('dashboard')->with('erro', 'Erro ao buscar chamados');
+        }
+
+        // Converte os tickets em uma coleção
+        $chamadosCollection = collect($tickets);
+
+        // 🔹 Aplicação de filtros
+        if ($request->filled('numero_chamado')) {
+            $chamadosCollection = $chamadosCollection->filter(function ($ticket) use ($request) {
+                return strpos($ticket['protocolo'], $request->numero_chamado) !== false;
+            });
+        }
+
+        if ($request->filled('status')) {
+            $chamadosCollection = $chamadosCollection->where('status', $request->status);
+        }
+
+        if ($request->filled('periodo')) {
+            $chamadosCollection = $chamadosCollection->filter(function ($chamado) use ($request) {
+                return strtotime($chamado['tempoAberto']) >= now()->subDays($request->periodo)->timestamp;
+            });
+        }
+        if ($request->filled('nivel')) {
+            $chamadosCollection = $chamadosCollection->where('nivel', $request->nivel);
+        }
+
+    // Ordenação
+    if ($request->ordenacao == 'recente') {
+        $chamadosCollection = $chamadosCollection->sortByDesc('abertoEm');
+    } elseif ($request->ordenacao == 'antigo') {
+        $chamadosCollection = $chamadosCollection->sortBy('abertoEm');
+    }
+
+        // 🔹 Paginação manual (50 por página)
+        $chamadosPaginados = $chamadosCollection->forPage($request->input('page', 1), 100);
+
+        // 🔹 Contagem de chamados por status e nível
+        $statusCount = [
+            'Em Aberto' => $chamadosCollection->where('status', 'Em atendimento')->count(),
+            'Aguardando' => $chamadosCollection->where('status', 'Aguardando')->count(),
+
+            'Em Aberto Junior' => $chamadosCollection->where('status', 'Em atendimento')->where('nivel', 'Junior')->count(),
+            'Aguardando Junior' => $chamadosCollection->where('status', 'Aguardando')->where('nivel', 'Junior')->count(),
+
+            'Em Aberto Pleno' => $chamadosCollection->where('status', 'Em atendimento')->where('nivel', 'Pleno')->count(),
+            'Aguardando Pleno' => $chamadosCollection->where('status', 'Aguardando')->where('nivel', 'Pleno')->count(),
+
+            'Em Aberto Senior' => $chamadosCollection->where('status', 'Em atendimento')->where('nivel', 'Senior')->count(),
+            'Aguardando Senior' => $chamadosCollection->where('status', 'Aguardando')->where('nivel', 'Senior')->count(),
+        ];
+
+
+        
+
+        return view('dashboard', compact('chamadosPaginados', 'statusCount', 'chamadosCollection'));
+    }
+
+   
+
     private function getNivel($ownerTeam)
     {
         if (strpos($ownerTeam, 'Suporte - Técnico Junior') !== false) {
@@ -135,7 +135,7 @@ class DashboardController extends Controller
         } elseif (strpos($ownerTeam, 'Suporte - Técnico Pleno') !== false) {
             return 'Pleno';
         } elseif (strpos($ownerTeam, 'Suporte - Técnico Sênior ') !== false) {
-            return 'Sênior';
+            return 'Senior';
         }
         elseif (strpos($ownerTeam, 'Data Center') !== false) {
             return 'Data Center';
