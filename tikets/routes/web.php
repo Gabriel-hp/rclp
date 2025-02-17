@@ -3,12 +3,10 @@
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/chamados-externos', [DashboardController::class, 'listarChamadosExternos']);
-
-
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/as', [DashboardController::class, 'index'])->name('dashboard');
 });
+
 
 
 Route::view('profile', 'profile')

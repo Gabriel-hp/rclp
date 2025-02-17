@@ -30,32 +30,25 @@ class DashboardController extends Controller
 
             // Se a data de criação estiver disponível, processa e formata
             if ($createdDate) {
-                // Remove possíveis "trailing data" da string de data
-                $createdDate = preg_replace('/\..+/', '', $createdDate); // Remove frações de segundos e dados extras
-
-                // Converte a data de abertura para o formato ISO 8601
+                $createdDate = preg_replace('/\..+/', '', $createdDate);
                 $abertoEm = Carbon::parse($createdDate);
-
-                // Calcula o tempo aberto
-                $tempoAberto = $abertoEm->diff(Carbon::now());
-
-
-            $cliente = 'Cliente'; 
-            if (!empty($ticket['clients']) && is_array($ticket['clients'])) {
-                $cliente = $ticket['clients'][0]['businessName'] ?? 'Cliente'; 
-            }
+                $tempoAberto = $abertoEm->diffInSeconds(Carbon::now());
             } else {
-  
                 $abertoEm = null;
                 $tempoAberto = null;
             }
- 
+            $cliente = 'Cliente'; 
+                if (!empty($ticket['clients']) && is_array($ticket['clients'])) {
+                    $cliente = $ticket['clients'][0]['businessName'] ?? 'Cliente'; 
+                }
+                
                 return [
                     'protocolo' => $ticket['protocol'] ?? 'N/A',
-                    'cliente' => $cliente, // Adiciona o nome do cliente ao array
+                    'cliente' => $cliente,
                     'status' => $ticket['status'] ?? 'Desconhecido',
                     'nivel' => $this->getNivel($ticket['ownerTeam'] ?? 'Indefinido'),
-                    'tempoAberto' => $tempoAberto // Adiciona o tempo aberto ao array
+                    'tempoAberto' => $tempoAberto,
+                    'abertoEm' => $abertoEm,
                 ];
             })->toArray();
         }
@@ -76,31 +69,37 @@ class DashboardController extends Controller
         $chamadosCollection = collect($tickets);
 
         // 🔹 Aplicação de filtros
-        if ($request->filled('numero_chamado')) {
-            $chamadosCollection = $chamadosCollection->filter(function ($ticket) use ($request) {
-                return strpos($ticket['protocolo'], $request->numero_chamado) !== false;
-            });
-        }
-
-        if ($request->filled('status')) {
-            $chamadosCollection = $chamadosCollection->where('status', $request->status);
-        }
-
-        if ($request->filled('periodo')) {
-            $chamadosCollection = $chamadosCollection->filter(function ($chamado) use ($request) {
-                return strtotime($chamado['tempoAberto']) >= now()->subDays($request->periodo)->timestamp;
-            });
-        }
-        if ($request->filled('nivel')) {
-            $chamadosCollection = $chamadosCollection->where('nivel', $request->nivel);
-        }
-
-    // Ordenação
-    if ($request->ordenacao == 'recente') {
-        $chamadosCollection = $chamadosCollection->sortByDesc('abertoEm');
-    } elseif ($request->ordenacao == 'antigo') {
-        $chamadosCollection = $chamadosCollection->sortBy('abertoEm');
+    if ($request->filled('numero_chamado')) {
+        $chamadosCollection = $chamadosCollection->filter(function ($ticket) use ($request) {
+            return strpos($ticket['protocolo'], $request->numero_chamado) !== false;
+        });
     }
+
+    if ($request->filled('status')) {
+        $chamadosCollection = $chamadosCollection->where('status', $request->status);
+    }
+
+    if ($request->filled('periodo')) {
+            $dataLimite = now()->subDays($request->periodo);
+            $chamadosCollection = $chamadosCollection->filter(function ($chamado) use ($dataLimite) {
+                return $chamado['abertoEm'] && $chamado['abertoEm']->greaterThanOrEqualTo($dataLimite);
+            });
+        }
+
+    if ($request->filled('nivel')) {
+        $chamadosCollection = $chamadosCollection->where('nivel', $request->nivel);
+    }
+
+    // 🔹 Ordenação
+    $chamadosCollection = $chamadosCollection->sortByDesc(function ($chamado) {
+        return \Carbon\Carbon::parse($chamado['tempoAberto'])->timestamp;
+    });
+    if ($request->ordenacao == 'antigo') {
+        $chamadosCollection = $chamadosCollection->sortBy(function ($chamado) {
+            return \Carbon\Carbon::parse($chamado['tempoAberto'])->timestamp;
+        });
+    }
+
 
         // 🔹 Paginação manual (50 por página)
         $chamadosPaginados = $chamadosCollection->forPage($request->input('page', 1), 100);
@@ -119,6 +118,8 @@ class DashboardController extends Controller
             'Em Aberto Senior' => $chamadosCollection->where('status', 'Em atendimento')->where('nivel', 'Senior')->count(),
             'Aguardando Senior' => $chamadosCollection->where('status', 'Aguardando')->where('nivel', 'Senior')->count(),
         ];
+
+
 
 
         

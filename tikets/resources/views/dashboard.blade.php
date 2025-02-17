@@ -99,7 +99,7 @@
             
             <div class="col-md-1">
                 <select name="nivel" class="form-control">
-                    <option value="">Nível</option>
+                    <option value="">Grupo</option>
                     <option value="Junior" {{ request('nivel') == 'Junior' ? 'selected' : '' }}>Junior</option>
                     <option value="Pleno" {{ request('nivel') == 'Pleno' ? 'selected' : '' }}>Pleno</option>
                     <option value="Senior" {{ request('nivel') == 'Sênior' ? 'selected' : '' }}>Sênior</option>
@@ -108,8 +108,8 @@
 
             <div class="col-md-2">
                 <select name="ordenacao" class="form-control">
-                    <option value="recente" {{ request('ordenacao') == 'recente' ? 'selected' : '' }}>Mais recentes</option>
-                    <option value="antigo" {{ request('ordenacao') == 'antigo' ? 'selected' : '' }}>Mais antigos</option>
+                    <option value="recente" {{ request('ordenacao') == 'recente' ? 'selected' : '' }}>Mais antigos</option>
+                    <option value="antigo" {{ request('ordenacao') == 'antigo' ? 'selected' : '' }}>Mais Recentes</option>
                 </select>
             </div>
             <div class="col-md-2">
@@ -134,30 +134,56 @@
             </thead>
             <tbody>
             @foreach($chamadosPaginados as $chamado)
-                <tr>
-                <td class="clientes">{{ $chamado['cliente'] }}</td> <!-- Exibe o nome do cliente -->
-                <td class="clientes-b">{{ $chamado['protocolo'] }}</td>
-                <td class="clientes-b">
-                        <span class="badge bg-{{ $chamado['status'] == 'Em atendimento' ? 'success' : ($chamado['status'] == 'Aguardando' ? 'info' : 'warning') }}">
-                            {{ $chamado['status'] }}
-                        </span>
-                </td>
-                <td class="clientes-b">{{ $chamado['nivel'] }}</td>
-                <td class="clientes-b">
-                @if($chamado['tempoAberto'])
-                    {{ $chamado['tempoAberto']->h }} horas e {{ $chamado['tempoAberto']->i }} minutos
-                @else
-                    Não informado
-                @endif
-                </td>
-                <td class="clientes-b">
-                    
-                    </td>
-                <td class="clientes-b">
-                  <a href="https://logicpro.movidesk.com/Ticket/EditByProtocol/{{ $chamado['protocolo'] }}" target="_blank"> <button type="button" class="btn btn-light">Acesse o ticket </button></a>
-                    </td>
-                </tr>
-            @endforeach
+            @php
+            
+              // Converter tempoAberto para um objeto Carbon, garantindo que não seja nulo
+                $tempoAberto = isset($chamado['tempoAberto']) ? \Carbon\Carbon::parse($chamado['tempoAberto']) : null;
+                $tempoAtendimento = $tempoAberto ? $tempoAberto->diffInMinutes(now()) : 0;
+                $alerta = '';
+
+            // Verifica se o chamado está "Em Atendimento" e se precisa ser escalonado
+            if ($chamado['status'] === 'Em atendimento' && $tempoAberto) {
+                if ($chamado['nivel'] === 'Junior' && $tempoAtendimento >= 30) {
+                    $alerta = 'Escalonar para Pleno';
+                } elseif ($chamado['nivel'] === 'Pleno' && $tempoAtendimento >= 180) {
+                    $alerta = 'Escalonar para Sênior';
+                }
+            } 
+            if ($chamado['status'] === 'Aguardando' && $tempoAberto) {
+                if ($chamado['nivel'] === 'Junior' && $tempoAtendimento >= 360) {
+                    $alerta = 'Escalonar para Pleno';
+                } elseif ($chamado['nivel'] === 'Pleno' && $tempoAtendimento >= 480) {
+                    $alerta = 'Escalonar para Sênior';
+                }
+            } 
+            @endphp
+
+    <tr>
+        <td class="clientes">{{ $chamado['cliente'] }}</td> <!-- Exibe o nome do cliente -->
+        <td class="clientes-b">{{ $chamado['protocolo'] }}</td>
+        <td class="clientes-b">
+            <span class="badge bg-{{ $chamado['status'] == 'Em atendimento' ? 'success' : ($chamado['status'] == 'Aguardando' ? 'info' : 'warning') }}">
+                {{ $chamado['status'] }}
+            </span>
+        </td>
+        <td class="clientes-b">{{ $chamado['nivel'] }}</td>
+        <td class="clientes-b">
+            @if($tempoAberto)
+                {{ $tempoAberto->diff(now())->format('%H horas e %I minutos') }}
+            @else
+                Não informado
+            @endif
+        </td>
+        <td class="alert-esc clientes-b">{{ $alerta }}</td>
+        <td class="clientes-b">
+            <a href="https://logicpro.movidesk.com/Ticket/EditByProtocol/{{ $chamado['protocolo'] }}" target="_blank">
+                <button type="button" class="btn btn-light">Acesse o ticket</button>
+            </a>
+        </td>
+    </tr>
+@endforeach
+
+
 
         </tbody>
         </table>
@@ -180,5 +206,6 @@
             }]
         },
     });
+    
 </script>
 @endsection

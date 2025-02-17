@@ -166,6 +166,10 @@ canvas {
     height: 350px !important;
 }
 
+.alert-esc{
+    color: red !important;
+}
+
 
 /* Responsividade */
 @media (max-width: 768px) {
