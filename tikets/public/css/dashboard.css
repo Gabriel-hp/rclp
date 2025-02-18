@@ -1,7 +1,7 @@
 /* Reset básico */
 body {
     font-family: 'Arial', sans-serif;
-    background-color: #181139;
+    background-color: #232946;
     margin: 0;
     padding: 0;
 }
@@ -13,7 +13,7 @@ body {
     padding: 20px;
 }
 .bg-app{
-    background-color: #111125;
+    background-color: #232946;
     color: aliceblue;
 }
 
@@ -42,8 +42,8 @@ body {
 
 }
 
-.clientes-b{
-    background-color: #292952 !important;
+#tabelaChamados td {
+    background-color: #121629 !important;
     color: aliceblue !important;
 }
 .card-aber{
