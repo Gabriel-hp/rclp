@@ -109,6 +109,14 @@
             </div>
         </div>
     </form>
+    <!-- Botão para gerar o relatório -->
+    <div class="container mt-4">
+    <!-- Botão para gerar o relatório -->
+    <div class="text-center mb-4">
+        <a href="{{ route('gerar.relatorio') }}" class="btn btn-primary">
+            Gerar Relatório Diário
+        </a>
+    </div>
 
     <!-- Lista de Chamados -->
     <div class="table-responsive mt-4">

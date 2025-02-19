@@ -5,6 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
+
+
+
 
 class DashboardController extends Controller
 {
@@ -49,7 +54,50 @@ class DashboardController extends Controller
         session(['chamados' => $tickets]); 
         return response()->json($tickets);
     }
+  
 
+
+    public function generateDailyReport()
+    {
+        // Busca os chamados da API
+        $tickets = $this->buscarChamadosAPI();
+    
+        if (!$tickets) {
+            return redirect()->back()->with('erro', 'Erro ao buscar chamados da API.');
+        }
+    
+        // Converte os tickets em uma coleção
+        $chamadosCollection = collect($tickets);
+    
+        // Agrupa os chamados por nível
+        $chamadosAgrupados = $chamadosCollection->groupBy('nivel');
+    
+        // Calcula o total de chamados
+        $totalChamados = $chamadosCollection->count();
+    
+        // Calcula o total por níveis
+        $totalPorNivel = $chamadosCollection->groupBy('nivel')->map->count();
+    
+        // Calcula os totais por status e nível
+        $statusCount = $this->contarChamadosPorStatusENivel($chamadosCollection);
+    
+        // Gera o PDF
+        $pdf = Pdf::loadView('reports.daily', [
+            'chamados' => $chamadosAgrupados,
+            'totalChamados' => $totalChamados,
+            'totalPorNivel' => $totalPorNivel,
+            'statusCount' => $statusCount,
+        ]);
+    
+        // Define o nome do arquivo
+        $fileName = 'relatorio_diario_' . Carbon::now()->format('Y-m-d_H-i-s') . '.pdf';
+    
+        // Salva o PDF no storage (opcional)
+        Storage::disk('local')->put('reports/' . $fileName, $pdf->output());
+    
+        // Retorna o PDF para o navegador
+        return $pdf->stream($fileName);
+    }
 
     public function index(Request $request)
     {
