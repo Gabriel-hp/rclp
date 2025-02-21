@@ -3,179 +3,147 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
+use App\Models\Ticket;
 use Carbon\Carbon;
-use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Facades\Storage;
-
-
-
+use Carbon\CarbonInterval;
 
 class DashboardController extends Controller
 {
-    private $apiUrl = "https://api.movidesk.com/public/v1/tickets";
-    private $apiToken = "8ef83eef-7ee0-4629-8d6d-ed0680eee679";
-
-    private function buscarChamadosAPI()
-    {
-        $params = [
-            'token' => $this->apiToken,
-            '$select' => 'protocol,status,ownerTeam,createdDate',
-            '$filter' => "status eq 'Em atendimento' or status eq 'Aguardando'",
-            '$expand' => 'clients($select=businessName)', 
-        ];
-
-        $response = Http::get($this->apiUrl, $params);
-
-        if (!$response->successful()) {
-            return null;
-        }
-
-        return collect($response->json())->map(function ($ticket) {
-            $createdDate = $ticket['createdDate'] ?? null;
-            $abertoEm = $createdDate ? Carbon::parse(preg_replace('/\..+/', '', $createdDate)) : null;
-            $tempoAberto = $abertoEm ? $abertoEm->diffInSeconds(Carbon::now()) : null;
-            $cliente = !empty($ticket['clients']) && is_array($ticket['clients']) ? $ticket['clients'][0]['businessName'] ?? 'Cliente' : 'Cliente';
-
-            return [
-                'protocolo' => $ticket['protocol'] ?? 'N/A',
-                'cliente' => $cliente,
-                'status' => $ticket['status'] ?? 'Desconhecido',
-                'nivel' => $this->getNivel($ticket['ownerTeam'] ?? 'Indefinido'),
-                'tempoAberto' => $tempoAberto,
-                'abertoEm' => $abertoEm,
-            ];
-        })->toArray();
-    }
-
-    public function atualizarChamados()
-    {
-        $tickets = $this->buscarChamadosAPI();
-        session(['chamados' => $tickets]); 
-        return response()->json($tickets);
-    }
-  
-
-
     public function generateDailyReport()
-    {
-        // Busca os chamados da API
-        $tickets = $this->buscarChamadosAPI();
-    
-        if (!$tickets) {
-            return redirect()->back()->with('erro', 'Erro ao buscar chamados da API.');
-        }
-    
-        // Converte os tickets em uma coleção
-        $chamadosCollection = collect($tickets);
-    
-        // Agrupa os chamados por nível
-        $chamadosAgrupados = $chamadosCollection->groupBy('nivel');
-    
-        // Calcula o total de chamados
-        $totalChamados = $chamadosCollection->count();
-    
-        // Calcula o total por níveis
-        $totalPorNivel = $chamadosCollection->groupBy('nivel')->map->count();
-    
-        // Calcula os totais por status e nível
-        $statusCount = $this->contarChamadosPorStatusENivel($chamadosCollection);
-    
-        // Gera o PDF
-        $pdf = Pdf::loadView('reports.daily', [
-            'chamados' => $chamadosAgrupados,
-            'totalChamados' => $totalChamados,
-            'totalPorNivel' => $totalPorNivel,
-            'statusCount' => $statusCount,
-        ]);
-    
-        // Define o nome do arquivo
-        $fileName = 'relatorio_diario_' . Carbon::now()->format('Y-m-d_H-i-s') . '.pdf';
-    
-        // Salva o PDF no storage (opcional)
-        Storage::disk('local')->put('reports/' . $fileName, $pdf->output());
-    
-        // Retorna o PDF para o navegador
-        return $pdf->stream($fileName);
+{
+    // Busca os chamados diretamente do banco de dados
+    $tickets = Ticket::all();
+
+    if ($tickets->isEmpty()) {
+        return redirect()->back()->with('erro', 'Nenhum chamado encontrado.');
     }
+
+    // Converte os tickets em uma coleção
+    $chamadosCollection = collect($tickets);
+
+    // Agrupa os chamados por nível
+    $chamadosAgrupados = $chamadosCollection->groupBy('nivel');
+
+    // Calcula o total de chamados
+    $totalChamados = $chamadosCollection->count();
+
+    // Calcula o total por níveis
+    $totalPorNivel = $chamadosCollection->groupBy('nivel')->map->count();
+
+    // Calcula os totais por status e nível
+    $statusCount = [
+        'Em atendimento' => Ticket::where('status', 'Em atendimento')->count(),
+        'Aguardando' => Ticket::where('status', 'Aguardando')->count(),
+        'Concluído' => Ticket::where('status', 'Concluído')->count(),
+    ];
+
+    // Gera o PDF
+    $pdf = \PDF::loadView('reports.daily', [
+        'chamados' => $chamadosAgrupados,
+        'totalChamados' => $totalChamados,
+        'totalPorNivel' => $totalPorNivel,
+        'statusCount' => $statusCount,
+    ])->setPaper('a4', 'landscape');;
+
+    // Retorna o PDF para download
+    return $pdf->download('relatorio_diario.pdf');
+}
 
     public function index(Request $request)
     {
+        $numeroChamado = $request->input('numero_chamado');
+        $status = $request->input('status');
+        $periodo = $request->input('periodo');
+        $nivel = $request->input('nivel');
+        $ordenacao = $request->input('ordenacao', 'recente');
 
-        $tickets = $this->buscarChamadosAPI();
+        // Construção da query com filtros
+        $query = Ticket::query();
 
-        if (!$tickets) {
-            return view('dashboard')->with('erro', 'Erro ao buscar chamados');
+        if ($numeroChamado) {
+            $query->where('protocolo', $numeroChamado);
         }
 
-        $chamadosCollection = collect($tickets);
-
-        // Aplicação de filtros
-        if ($request->filled('numero_chamado')) {
-            $chamadosCollection = $chamadosCollection->filter(fn($ticket) => strpos($ticket['protocolo'], $request->numero_chamado) !== false);
+        if ($status) {
+            $query->where('status', $status);
         }
 
-        if ($request->filled('status')) {
-            $chamadosCollection = $chamadosCollection->where('status', $request->status);
+        if ($nivel) {
+            $query->where('nivel', $nivel);
         }
 
-        if ($request->filled('periodo')) {
-            $dataLimite = now()->subDays($request->periodo);
-            $chamadosCollection = $chamadosCollection->filter(fn($chamado) => $chamado['abertoEm'] && $chamado['abertoEm']->greaterThanOrEqualTo($dataLimite));
+        if ($periodo) {
+            $query->where('aberto_em', '>=', Carbon::now()->subDays($periodo));
         }
 
-        if ($request->filled('nivel')) {
-            $chamadosCollection = $chamadosCollection->where('nivel', $request->nivel);
-        }
+        $query->orderBy('aberto_em', $ordenacao === 'recente' ? 'desc' : 'asc');
 
-        // Ordenação
-        $chamadosCollection = $chamadosCollection->sortByDesc(fn($chamado) => $chamado['tempoAberto']);
+        // Obter os chamados filtrados
+        $chamados = $query->get();
 
-        if ($request->ordenacao == 'antigo') {
-            $chamadosCollection = $chamadosCollection->sortBy(fn($chamado) => $chamado['tempoAberto']);
-        }
+        // Adiciona formatação do tempo e lógica de escalonamento
+        $chamados->transform(function ($chamado) {
+            if ($chamado->tempo_aberto) {
+                // Converter segundos para horas e minutos
+                $totalHoras = floor($chamado->tempo_aberto / 3600); // Total de horas inteiras
+                $minutosRestantes = floor(($chamado->tempo_aberto % 3600) / 60); // Minutos restantes
+        
+                // Formatar para exibir "X horas e Y minutos"
+                $chamado->tempo_aberto_formatado = sprintf('%d horas e %d minutos', $totalHoras, $minutosRestantes);
+        
+                // Converter tempo de segundos para minutos para a lógica de escalonamento
+                $tempoAbertoEmMinutos = floor($chamado->tempo_aberto / 60);
+                
+                // Lógica de escalonamento
+                if ($chamado->status === 'Em atendimento') {
+                    if ($chamado->nivel === 'Junior' && $tempoAbertoEmMinutos >= 3) {
+                        $chamado->escalonamento = 'Escalonar para Pleno';
+                    } elseif ($chamado->nivel === 'Pleno' && $tempoAbertoEmMinutos >= 180) {
+                        $chamado->escalonamento = 'Escalonar para Sênior';
+                    } else {
+                        $chamado->escalonamento = 'Sem ação';
+                    }
+                } elseif ($chamado->status === 'Aguardando') {
+                    if ($chamado->nivel === 'Junior' && $tempoAbertoEmMinutos >= 360) {
+                        $chamado->escalonamento = 'Escalonar para Pleno';
+                    } elseif ($chamado->nivel === 'Pleno' && $tempoAbertoEmMinutos >= 480) {
+                        $chamado->escalonamento = 'Escalonar para Sênior';
+                    } else {
+                        $chamado->escalonamento = 'Sem ação';
+                    }
+                } else {
+                    $chamado->escalonamento = 'Sem ação';
+                }
+            } else {
+                $chamado->tempo_aberto_formatado = 'N/A';
+                $chamado->escalonamento = 'Sem ação';
+            }
+        
+            return $chamado;
+        });
 
-        // Paginação manual (100 por página)
-        $chamadosPaginados = $chamadosCollection->forPage($request->input('page', 1), 100);
+        
+        
+        
+        
+         
 
         // Contagem de chamados por status e nível
-        $statusCount = $this->contarChamadosPorStatusENivel($chamadosCollection);
-
-        return view('dashboard', compact('chamadosPaginados', 'statusCount', 'chamadosCollection'));
-    }
-
-    private function contarChamadosPorStatusENivel($collection)
-    {
-        $statusTypes = ['Em atendimento', 'Aguardando'];
-        $niveis = ['Junior', 'Pleno', 'Senior'];
-        $statusCount = [];
-
-        foreach ($statusTypes as $status) {
-            $statusCount[$status] = $collection->where('status', $status)->count();
-            foreach ($niveis as $nivel) {
-                $statusCount["{$status} {$nivel}"] = $collection->where('status', $status)->where('nivel', $nivel)->count();
-            }
-        }
-
-        return $statusCount;
-    }
-
-    private function getNivel($ownerTeam)
-    {
-        $mapaNiveis = [
-            'Suporte - Técnico Junior' => 'Junior',
-            'Suporte - Técnico Pleno' => 'Pleno',
-            'Suporte - Técnico Sênior' => 'Senior',
-            'Data Center' => 'Data Center',
-            'Operações' => 'Operações',
+        $statusCount = [
+            'Em atendimento' => Ticket::where('status', 'Em atendimento')->count(),
+            'Aguardando' => Ticket::where('status', 'Aguardando')->count(),
+            'Em atendimento Junior' => Ticket::where('status', 'Em atendimento')->where('nivel', 'Junior')->count(),
+            'Aguardando Junior' => Ticket::where('status', 'Aguardando')->where('nivel', 'Junior')->count(),
+            'Em atendimento Pleno' => Ticket::where('status', 'Em atendimento')->where('nivel', 'Pleno')->count(),
+            'Aguardando Pleno' => Ticket::where('status', 'Aguardando')->where('nivel', 'Pleno')->count(),
+            'Em atendimento Senior' => Ticket::where('status', 'Em atendimento')->where('nivel', 'Senior')->count(),
+            'Aguardando Senior' => Ticket::where('status', 'Aguardando')->where('nivel', 'Senior')->count(),
         ];
 
-        foreach ($mapaNiveis as $chave => $nivel) {
-            if (strpos($ownerTeam, $chave) !== false) {
-                return $nivel;
-            }
-        }
-
-        return 'Indefinido';
+        // Retornar os dados para a view
+        return view('dashboard', [
+            'chamadosCollection' => $chamados,
+            'statusCount' => $statusCount
+        ]);
     }
 }

@@ -100,8 +100,8 @@
             </div>
             <div class="col-md-2">
                 <select name="ordenacao" class="form-control">
-                    <option value="recente" {{ request('ordenacao') == 'recente' ? 'selected' : '' }}>Mais antigos</option>
-                    <option value="antigo" {{ request('ordenacao') == 'antigo' ? 'selected' : '' }}>Mais Recentes</option>
+                    <option value="recente" {{ request('ordenacao') == 'recente' ? 'selected' : '' }}>Mais Recentes</option>
+                    <option value="antigo" {{ request('ordenacao') == 'antigo' ? 'selected' : '' }}>Mais antigos</option>
                 </select>
             </div>
             <div class="col-md-2">
@@ -128,64 +128,38 @@
                     <th>Status</th>
                     <th>Grupo</th>
                     <th>Tempo</th>
-                    <th>Escalonamento</th>
+                    <th>Ação</th>
                     <th>Ticket</th>
                 </tr>
             </thead>
             <tbody id="tabelaChamados">
-                @foreach ($chamadosCollection as $chamado)
-                @php
-                    // Verifica se 'tempoAberto' existe e faz o parse para Carbon
-                    $tempoAberto = isset($chamado['tempoAberto']) ? \Carbon\Carbon::parse($chamado['tempoAberto']) : null;
-                    $alerta = '';
+            @foreach ($chamadosCollection as $chamado)
+    <tr>
+        <td>{{ $chamado->protocolo }}</td>
+        <td>{{ $chamado->cliente }}</td>
+        <td>
+            <span class="badge bg-{{ $chamado->status === 'Em atendimento' ? 'success' : ($chamado->status === 'Aguardando' ? 'info' : 'warning') }}">
+                {{ $chamado->status }}
+            </span>
+        </td>
+        <td>{{ $chamado->nivel }}</td>
+        <td>{{ $chamado->tempo_aberto_formatado }}</td>
+        <td>{{ $chamado->escalonamento }}</td>
+        <td>
+            <a href="https://logicpro.movidesk.com/Ticket/EditByProtocol/{{ $chamado->protocolo }}" target="_blank">
+                <button type="button" class="btn btn-light">Acesse o ticket</button>
+            </a>
+        </td>
+    </tr>
+@endforeach
 
-                    if ($tempoAberto) {
-                        // Calcula a diferença de tempo usando o método diff
-                        $diferenca = $tempoAberto->diff(now());
-                        $horas = $diferenca->h + ($diferenca->days * 24); // Converte dias em horas
-                        $minutos = $diferenca->i;
+        </tbody>
 
-                        // Lógica para definir o alerta de escalonamento
-                        if ($chamado['status'] === 'Em atendimento') {
-                            if ($chamado['nivel'] === 'Junior' && $tempoAberto->diffInMinutes(now()) >= 30) {
-                                $alerta = 'Escalonar para Pleno';
-                            } elseif ($chamado['nivel'] === 'Pleno' && $tempoAberto->diffInMinutes(now()) >= 180) {
-                                $alerta = 'Escalonar para Sênior';
-                            }
-                        } 
-                        if ($chamado['status'] === 'Aguardando') {
-                            if ($chamado['nivel'] === 'Junior' && $tempoAberto->diffInMinutes(now()) >= 360) {
-                                $alerta = 'Escalonar para Pleno';
-                            } elseif ($chamado['nivel'] === 'Pleno' && $tempoAberto->diffInMinutes(now()) >= 480) {
-                                $alerta = 'Escalonar para Sênior';
-                            }
-                        }
-                    } else {
-                        // Se não houver tempoAberto, define horas e minutos como 0
-                        $horas = 0;
-                        $minutos = 0;
-                    }
-                @endphp
-
-                <td class="clientes-b">
-                @if($tempoAberto)
-                    {{ $tempoAberto->diff(date: now())->format('%H horas e %I minutos') }}
-                @else
-                    Não informado
-                @endif
-                </td>
-                        <td class="alert-esc">{{ $alerta }}</td>
-                        <td>
-                            <a href="https://logicpro.movidesk.com/Ticket/EditByProtocol/{{ $chamado['protocolo'] }}" target="_blank">
-                                <button type="button" class="btn btn-light">Acesse o ticket</button>
-                            </a>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
         </table>
     </div>
 </div>
+
+
 
 <script>
     var ctx = document.getElementById('chamadosChart').getContext('2d');
@@ -202,56 +176,37 @@
     });
 
     function atualizarChamados() {
-        fetch('/dashboard/update')
-            .then(response => response.json())
-            .then(data => {
-                let tabela = document.getElementById('tabelaChamados');
-                tabela.innerHTML = "";
+    fetch('/dashboard/update')
+        .then(response => response.json())
+        .then(data => {
+            let tabela = document.getElementById('tabelaChamados');
+            tabela.innerHTML = "";
 
-                data.forEach(ticket => {
-                    let tempoAberto = ticket.tempoAberto ? new Date(ticket.tempoAberto) : null;
-                    let tempoAtendimento = tempoAberto ? Math.floor((new Date() - tempoAberto) / 60000) : 0;
-                    let horas = Math.floor(tempoAtendimento / 60);
-                    let minutos = tempoAtendimento % 60;
-                    let alerta = "";
-
-                    if (ticket.status === 'Em atendimento' && tempoAberto) {
-                        if (ticket.nivel === 'Junior' && tempoAtendimento >= 30) {
-                            alerta = 'Escalonar para Pleno';
-                        } else if (ticket.nivel === 'Pleno' && tempoAtendimento >= 180) {
-                            alerta = 'Escalonar para Sênior';
-                        }
-                    }
-                    if (ticket.status === 'Aguardando' && tempoAberto) {
-                        if (ticket.nivel === 'Junior' && tempoAtendimento >= 360) {
-                            alerta = 'Escalonar para Pleno';
-                        } else if (ticket.nivel === 'Pleno' && tempoAtendimento >= 480) {
-                            alerta = 'Escalonar para Sênior';
-                        }
-                    }
-
-                    let newRow = tabela.insertRow();
-                    newRow.className = 'clientes-b';
-
-                    let cells = [
-                        ticket.protocolo,
-                        ticket.cliente,
-                        `<span class="badge bg-${ticket.status === 'Em atendimento' ? 'success' : (ticket.status === 'Aguardando' ? 'info' : 'warning')}">${ticket.status}</span>`,
-                        ticket.nivel,
-                        tempoAberto ? `${horas} horas e ${minutos} minutos` : 'Não informado',
                         alerta,
                         `<a href="https://logicpro.movidesk.com/Ticket/EditByProtocol/${ticket.protocolo}" target="_blank"><button type="button" class="btn btn-light">Acesse o ticket</button></a>`
                     ];
 
-                    cells.forEach((content, index) => {
-                        let cell = newRow.insertCell(index);
-                        cell.innerHTML = content;
-                    });
+            data.forEach(ticket => {
+                let newRow = tabela.insertRow();
+                let cells = [
+                    ticket.protocolo,
+                    ticket.cliente,
+                    `<span class="badge bg-${ticket.status === 'Em atendimento' ? 'success' : (ticket.status === 'Aguardando' ? 'info' : 'warning')}">${ticket.status}</span>`,
+                    ticket.nivel,
+                    ticket.aberto_em,
+                    `<a href="https://logicpro.movidesk.com/Ticket/EditByProtocol/${ticket.protocolo}" target="_blank"><button type="button" class="btn btn-light">Acesse o ticket</button></a>`
+                ];
+                
+                cells.forEach((content, index) => {
+                    let cell = newRow.insertCell(index);
+                    cell.innerHTML = content;
                 });
-            })
-            .catch(error => console.error('Erro ao atualizar:', error));
-    }
+            });
+        })
+        .catch(error => console.error('Erro ao atualizar:', error));
+}
 
-    setInterval(atualizarChamados, 80.000); // Atualiza a cada 30 seg (30.000ms)
+setInterval(atualizarChamados, 6000);
+
 </script>
 @endsection
