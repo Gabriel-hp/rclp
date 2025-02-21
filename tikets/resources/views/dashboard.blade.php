@@ -182,10 +182,6 @@
             let tabela = document.getElementById('tabelaChamados');
             tabela.innerHTML = "";
 
-                        alerta,
-                        `<a href="https://logicpro.movidesk.com/Ticket/EditByProtocol/${ticket.protocolo}" target="_blank"><button type="button" class="btn btn-light">Acesse o ticket</button></a>`
-                    ];
-
             data.forEach(ticket => {
                 let newRow = tabela.insertRow();
                 let cells = [
