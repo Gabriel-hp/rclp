@@ -23,6 +23,5 @@ class AppServiceProvider extends ServiceProvider
     {
         // Agendando seu comando 'tickets:atualizar' a cada 30 minutos
         $schedule->call(fn () => \Artisan::call('tickets:atualizar'))->everyThirtyMinutes();
-
     }
 }

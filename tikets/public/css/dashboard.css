@@ -170,6 +170,58 @@ canvas {
     color: red !important;
 }
 
+/*modo ligth*/
+/* Modo Light */
+body.light-mode {
+    background-color: #f8f9fa;
+    color: #333;
+}
+
+.light-mode .bg-app {
+    background-color: #ffffff;
+    color: #333;
+}
+
+.light-mode .table {
+    background-color: #ffffff !important;
+    color: #333 !important;
+}
+
+.light-mode .table th {
+    background-color: #e9ecef;
+    color: #333;
+}
+
+.light-mode .clientes {
+    background-color: #ffffff !important;
+    color: #333 !important;
+}
+
+.light-mode #tabelaChamados td {
+    background-color: #f8f9fa !important;
+    color: #333 !important;
+}
+
+.light-mode .card-aber {
+    background-color: #ffc107;
+}
+
+.light-mode .bg-agur {
+    background-color: #17a2b8;
+}
+
+.light-mode .bg-tot1 {
+    background-color: #ffc107;
+}
+
+.light-mode .bg-tot {
+    background-color: #17a2b8;
+}
+
+.light-mode .alert-esc {
+    color: #dc3545 !important;
+}
+
 
 /* Responsividade */
 @media (max-width: 768px) {
@@ -184,4 +236,33 @@ canvas {
     .container {
         padding: 10px;
     }
+}
+
+.btn-mde {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    background-color: #222;
+    color: #fff;
+}
+
+.btn-mde .icon {
+    font-size: 20px;
+    transition: transform 0.3s ease;
+}
+
+.btn-mde.light {
+    background-color: #f0f0f0;
+    color: #222;
+}
+
+.btn-mde.light .icon {
+    transform: rotate(180deg);
 }

@@ -1,6 +1,8 @@
+
 @extends('layouts.app')
 
 @section('content')
+
 <div class="container mt-4">
     <div class="row align-items-center">
         <div class="col-md-6 d-flex justify-content-center">
@@ -69,6 +71,12 @@
             <canvas class="grafiChar" id="chamadosChart"></canvas>
         </div>
     </div>
+     <!-- Botão para gerar o relatório -->
+     <div class="text-center mb-4">
+        <a href="{{ route('gerar.relatorio') }}" class="btn btn-primary">
+            Gerar Relatório Diário
+        </a>
+    </div>
 
     <!-- Filtros -->
     <form method="GET" action="{{ route('dashboard') }}" class="mb-4 mt-5">
@@ -111,12 +119,7 @@
     </form>
     <!-- Botão para gerar o relatório -->
     <div class="container mt-4">
-    <!-- Botão para gerar o relatório -->
-    <div class="text-center mb-4">
-        <a href="{{ route('gerar.relatorio') }}" class="btn btn-primary">
-            Gerar Relatório Diário
-        </a>
-    </div>
+   
 
     <!-- Lista de Chamados -->
     <div class="table-responsive mt-4">
@@ -202,7 +205,39 @@
         .catch(error => console.error('Erro ao atualizar:', error));
 }
 
-setInterval(atualizarChamados, 6000);
+setInterval(atualizarChamados, 30000);
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    const toggleButton = document.getElementById('toggle-theme');
+    const body = document.body;
+    const icon = toggleButton.querySelector('.icon');
+
+    // Verifica o tema salvo no localStorage e aplica ao carregar a página
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light-mode') {
+        body.classList.add('light-mode');
+        toggleButton.classList.add('light');
+        icon.textContent = "☀️"; // Define o ícone para sol se estiver no tema claro
+    } else {
+        icon.textContent = "🌙"; // Define o ícone para lua se estiver no tema escuro
+    }
+
+    // Alterna entre os temas ao clicar no botão
+    toggleButton.addEventListener('click', function () {
+        body.classList.toggle('light-mode');
+        toggleButton.classList.toggle('light');
+
+        if (body.classList.contains('light-mode')) {
+            localStorage.setItem('theme', 'light-mode');
+            icon.textContent = "☀️"; // Altera para ícone de sol no tema claro
+        } else {
+            localStorage.setItem('theme', 'dark-mode');
+            icon.textContent = "🌙"; // Altera para ícone de lua no tema escuro
+        }
+    });
+});
+
 
 </script>
 @endsection

@@ -5,49 +5,50 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Ticket;
 use Carbon\Carbon;
-use Carbon\CarbonInterval;
+
 
 class DashboardController extends Controller
 {
     public function generateDailyReport()
-{
-    // Busca os chamados diretamente do banco de dados
-    $tickets = Ticket::all();
+    {
+        // Busca os chamados diretamente do banco de dados
+        $tickets = Ticket::all();
 
-    if ($tickets->isEmpty()) {
-        return redirect()->back()->with('erro', 'Nenhum chamado encontrado.');
+        if ($tickets->isEmpty()) {
+            return redirect()->back()->with('erro', 'Nenhum chamado encontrado.');
+        }
+
+        // Converte os tickets em uma coleção
+        $chamadosCollection = collect($tickets);
+
+        // Agrupa os chamados por nível
+        $chamadosAgrupados = $chamadosCollection->groupBy('nivel');
+
+        // Calcula o total de chamados
+        $totalChamados = $chamadosCollection->count();
+
+        // Calcula o total por níveis
+        $totalPorNivel = $chamadosCollection->groupBy('nivel')->map->count();
+
+        // Calcula os totais por status e nível
+        $statusCount = [
+            'Em atendimento' => Ticket::where('status', 'Em atendimento')->count(),
+            'Aguardando' => Ticket::where('status', 'Aguardando')->count(),
+            'Concluído' => Ticket::where('status', 'Concluído')->count(),
+        ];
+
+        // Gera o PDF
+        $pdf = \PDF::loadView('reports.daily', [
+            'chamados' => $chamadosAgrupados,
+            'totalChamados' => $totalChamados,
+            'totalPorNivel' => $totalPorNivel,
+            'statusCount' => $statusCount,
+        ])->setPaper('a4', 'landscape');
+        ;
+
+        // Retorna o PDF para download
+        return $pdf->download('relatorio_diario.pdf');
     }
-
-    // Converte os tickets em uma coleção
-    $chamadosCollection = collect($tickets);
-
-    // Agrupa os chamados por nível
-    $chamadosAgrupados = $chamadosCollection->groupBy('nivel');
-
-    // Calcula o total de chamados
-    $totalChamados = $chamadosCollection->count();
-
-    // Calcula o total por níveis
-    $totalPorNivel = $chamadosCollection->groupBy('nivel')->map->count();
-
-    // Calcula os totais por status e nível
-    $statusCount = [
-        'Em atendimento' => Ticket::where('status', 'Em atendimento')->count(),
-        'Aguardando' => Ticket::where('status', 'Aguardando')->count(),
-        'Concluído' => Ticket::where('status', 'Concluído')->count(),
-    ];
-
-    // Gera o PDF
-    $pdf = \PDF::loadView('reports.daily', [
-        'chamados' => $chamadosAgrupados,
-        'totalChamados' => $totalChamados,
-        'totalPorNivel' => $totalPorNivel,
-        'statusCount' => $statusCount,
-    ])->setPaper('a4', 'landscape');;
-
-    // Retorna o PDF para download
-    return $pdf->download('relatorio_diario.pdf');
-}
 
     public function index(Request $request)
     {
@@ -87,13 +88,13 @@ class DashboardController extends Controller
                 // Converter segundos para horas e minutos
                 $totalHoras = floor($chamado->tempo_aberto / 3600); // Total de horas inteiras
                 $minutosRestantes = floor(($chamado->tempo_aberto % 3600) / 60); // Minutos restantes
-        
+
                 // Formatar para exibir "X horas e Y minutos"
                 $chamado->tempo_aberto_formatado = sprintf('%d horas e %d minutos', $totalHoras, $minutosRestantes);
-        
+
                 // Converter tempo de segundos para minutos para a lógica de escalonamento
                 $tempoAbertoEmMinutos = floor($chamado->tempo_aberto / 60);
-                
+
                 // Lógica de escalonamento
                 if ($chamado->status === 'Em atendimento') {
                     if ($chamado->nivel === 'Junior' && $tempoAbertoEmMinutos >= 3) {
@@ -118,15 +119,15 @@ class DashboardController extends Controller
                 $chamado->tempo_aberto_formatado = 'N/A';
                 $chamado->escalonamento = 'Sem ação';
             }
-        
+
             return $chamado;
         });
 
-        
-        
-        
-        
-         
+
+
+
+
+
 
         // Contagem de chamados por status e nível
         $statusCount = [

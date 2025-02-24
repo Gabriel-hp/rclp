@@ -33,7 +33,7 @@ class AtualizarTickets extends Command
 
         $tickets = collect($response->json())->map(function ($ticket) {
             $createdDate = $ticket['createdDate'] ?? null;
-            $abertoEm = $createdDate ? Carbon::parse(preg_replace('/\..+/', '', $createdDate)) : null;
+            $abertoEm = $createdDate ? Carbon::parse(preg_replace('/\..+/', '', $createdDate), 'UTC')->setTimezone('America/Manaus') : null;
             $tempoAberto = $abertoEm ? $abertoEm->diffInSeconds(Carbon::now()) : null;
             $cliente = !empty($ticket['clients']) && is_array($ticket['clients']) ? $ticket['clients'][0]['businessName'] ?? 'Cliente' : 'Cliente';
 
