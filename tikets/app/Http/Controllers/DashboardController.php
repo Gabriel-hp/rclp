@@ -28,7 +28,9 @@ class DashboardController extends Controller
         $totalChamados = $chamadosCollection->count();
 
         // Calcula o total por níveis
-        $totalPorNivel = $chamadosCollection->groupBy('nivel')->map->count();
+        $totalPorNivel = $chamadosCollection->groupBy('nivel')->map->count();;
+
+        
 
         // Calcula os totais por status e nível
         $statusCount = [
@@ -44,11 +46,19 @@ class DashboardController extends Controller
             'totalPorNivel' => $totalPorNivel,
             'statusCount' => $statusCount,
         ])->setPaper('a4', 'landscape');
-        ;
 
         // Retorna o PDF para download
         return $pdf->download('relatorio_diario.pdf');
     }
+    public function update()
+    {
+        $chamados = Ticket::select('protocolo', 'cliente', 'status', 'nivel', 'aberto_em', 'escalonamento', 'updated_at as lastUpdate')
+            ->orderBy('updated_at', 'desc')
+            ->get();
+    
+        dd($chamados); // Para depuração
+    }
+    
 
     public function index(Request $request)
     {
@@ -77,12 +87,14 @@ class DashboardController extends Controller
             $query->where('aberto_em', '>=', Carbon::now()->subDays($periodo));
         }
 
+      
+
+
         $query->orderBy('aberto_em', $ordenacao === 'recente' ? 'desc' : 'asc');
 
         // Obter os chamados filtrados
         $chamados = $query->get();
 
-        // Adiciona formatação do tempo e lógica de escalonamento
         $chamados->transform(function ($chamado) {
             if ($chamado->tempo_aberto) {
                 // Converter segundos para horas e minutos
@@ -97,9 +109,9 @@ class DashboardController extends Controller
 
                 // Lógica de escalonamento
                 if ($chamado->status === 'Em atendimento') {
-                    if ($chamado->nivel === 'Junior' && $tempoAbertoEmMinutos >= 3) {
-                        $chamado->escalonamento = 'Escalonar para Pleno';
-                    } elseif ($chamado->nivel === 'Pleno' && $tempoAbertoEmMinutos >= 180) {
+                    if ($chamado->nivel === 'Junior' && $tempoAbertoEmMinutos >= 30) {
+                        $chamado->escalonamento = 'Escalonar para Pleno'    ;
+                    } elseif ($chamado->nivel === 'Pleno' && $tempoAbertoEmMinutos >= 50) {
                         $chamado->escalonamento = 'Escalonar para Sênior';
                     } else {
                         $chamado->escalonamento = 'Sem ação';

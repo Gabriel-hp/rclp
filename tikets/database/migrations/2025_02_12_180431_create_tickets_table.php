@@ -14,6 +14,8 @@ return new class extends Migration {
             $table->string('status');
             $table->string('nivel');
             $table->timestamp('aberto_em')->nullable();
+            $table->timestamp('lastUpdate')->nullable();
+            $table->timestamp('resolvedIn')->nullable();
             $table->integer('tempo_aberto')->nullable();
             $table->timestamps();
         });

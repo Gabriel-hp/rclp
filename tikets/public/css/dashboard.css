@@ -203,15 +203,21 @@ body.light-mode {
 }
 
 .light-mode .card-aber {
-    background-color: #ffc107;
+    background-color: #D77534;
 }
 
 .light-mode .bg-agur {
     background-color: #17a2b8;
 }
+.light-mode .table th {
+    background-color: #013804;
+    color: white;
+    padding: 10px;
+    
+}
 
 .light-mode .bg-tot1 {
-    background-color: #ffc107;
+    background-color: #D77534;
 }
 
 .light-mode .bg-tot {

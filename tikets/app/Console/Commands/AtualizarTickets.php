@@ -19,8 +19,8 @@ class AtualizarTickets extends Command
 
         $params = [
             'token' => $apiToken,
-            '$select' => 'protocol,status,ownerTeam,createdDate',
-            '$filter' => "status eq 'Em atendimento' or status eq 'Aguardando'",
+            '$select' => 'protocol,status,ownerTeam,createdDate,lastUpdate, resolvedIn',
+            '$filter' => "status eq 'Em atendimento' or status eq 'Aguardando' or status eq 'Data Center'",
             '$expand' => 'clients($select=businessName)', 
         ];
 
@@ -36,6 +36,9 @@ class AtualizarTickets extends Command
             $abertoEm = $createdDate ? Carbon::parse(preg_replace('/\..+/', '', $createdDate), 'UTC')->setTimezone('America/Manaus') : null;
             $tempoAberto = $abertoEm ? $abertoEm->diffInSeconds(Carbon::now()) : null;
             $cliente = !empty($ticket['clients']) && is_array($ticket['clients']) ? $ticket['clients'][0]['businessName'] ?? 'Cliente' : 'Cliente';
+            $lastUpdate = $ticket['lastUpdate'] ?? null;
+            $lastUpdate = $lastUpdate ? Carbon::parse(preg_replace('/\..+/', '', $lastUpdate), 'UTC')->setTimezone('America/Manaus') : null;
+            $resolvedIn = $ticket['resolvedIn'] ?? null;
 
             return [
                 'protocolo' => $ticket['protocol'] ?? 'N/A',
@@ -44,6 +47,8 @@ class AtualizarTickets extends Command
                 'nivel' => $this->getNivel($ticket['ownerTeam'] ?? 'Indefinido'),
                 'aberto_em' => $abertoEm,
                 'tempo_aberto' => $tempoAberto,
+                'lastUpdate' => $lastUpdate,
+                'resolvedIn' => $resolvedIn,
             ];
         });
 
