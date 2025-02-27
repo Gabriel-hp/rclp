@@ -151,6 +151,10 @@ class DashboardController extends Controller
             'Aguardando Pleno' => Ticket::where('status', 'Aguardando')->where('nivel', 'Pleno')->count(),
             'Em atendimento Senior' => Ticket::where('status', 'Em atendimento')->where('nivel', 'Senior')->count(),
             'Aguardando Senior' => Ticket::where('status', 'Aguardando')->where('nivel', 'Senior')->count(),
+
+            'Em atendimento Data Center' => Ticket::where('status', 'Em atendimento')->where('nivel', 'Data Center')->count(),
+            'Aguardando Data Center' => Ticket::where('status', 'Aguardando')->where('nivel', 'Data Center')->count(),'Aguardando Data Center' => Ticket::where('status', 'Aguardando')->where('nivel', 'Data Center')->count(),
+            'Data Center' => Ticket::where('status', 'Data Center')->where('nivel', 'Data Center')->count(),
         ];
 
         // Retornar os dados para a view

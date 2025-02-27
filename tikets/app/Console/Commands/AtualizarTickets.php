@@ -27,7 +27,7 @@ class AtualizarTickets extends Command
         $response = Http::get($apiUrl, $params);
 
         if (!$response->successful()) {
-            $this->error('Erro ao buscar tickets da API');
+            $this->error('Erro ao   buscar tickets da API');
             return;
         }
 

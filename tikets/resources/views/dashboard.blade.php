@@ -36,6 +36,20 @@
                             </div>
                         </div>
                     </div>
+                    <div class="sup">
+                        <div class="card-aber card text-white small-card">
+                            <div class="card-body">
+                                <h5 class="card-title">Em Aberto Data Center</h5>
+                                <p class="card-text fs-4">{{ $statusCount['Em atendimento Data Center'] ?? 0 }}</p>
+                            </div>
+                        </div>
+                        <div class="card bg-agur text-white small-card">
+                            <div class="card-body">
+                                <h5 class="card-title">Aguardando Data Center</h5>
+                                <p class="card-text fs-4">{{ $statusCount['Data Center'] ?? 0 }}</p>
+                            </div>
+                        </div>
+                    </div>
                     <div class="infe">
                         <div class="card-aber card text-white small-card">
                             <div class="card-body">
